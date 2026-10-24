@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>키캡월드 구구단</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+/* Layout: full-screen 3D stage, with paper "keycap" panels floating over it. One bright look for kids, set on purpose for both host themes. */
+:root {
+  --sky: #bfe6ff;
+  --ink: #2b2d42;
+  --ink-soft: #5d6180;
+  --paper: #fffaf0;
+  --paper-deep: #f3ead8;
+  --edge: #d9cdb8;
+  --edge-deep: #b9aa8f;
+  --coral: #ff7a59;
+  --coral-deep: #d4573a;
+  --mint: #3fbf86;
+  --mint-deep: #2a9566;
+  --gold: #ffc542;
+  --gold-deep: #d99a12;
+  --pink: #ff9fb6;
+  --shade: rgba(43, 45, 66, 0.35);
+  --font: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--sky); color: var(--ink); font-family: var(--font);
+  overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+.screen {
+  position: fixed; inset: 0; overflow-y: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  touch-action: pan-y;
+}
+.dim { background: var(--shade); }
+
+/* keycap buttons */
+.key {
+  font: inherit; font-size: 20px; line-height: 1.1; color: var(--ink);
+  background: var(--paper); border: 2px solid var(--edge); border-bottom-width: 7px;
+  border-radius: 14px; padding: 10px 18px; cursor: pointer;
+  transition: transform .06s, border-bottom-width .06s;
+}
+.key:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 3px; }
+.key:focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }
+.key:disabled { opacity: .45; cursor: default; }
+.key.primary { background: var(--coral); border-color: var(--coral-deep); color: #fff; }
+.key.mint { background: var(--mint); border-color: var(--mint-deep); color: #fff; }
+.key.gold { background: var(--gold); border-color: var(--gold-deep); color: var(--ink); }
+.key.small { font-size: 16px; padding: 7px 12px; border-bottom-width: 5px; border-radius: 11px; }
+
+.panel {
+  width: 100%; max-width: 980px; box-sizing: border-box;
+  background: var(--paper); border: 2px solid var(--edge); border-bottom-width: 8px;
+  border-radius: 22px; padding: 20px;
+}
+h1, h2, h3 { font-weight: 400; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+
+/* title */
+#title { justify-content: center; }
+.logo { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.logo span {
+  display: grid; place-items: center; width: clamp(64px, 18vw, 110px); aspect-ratio: 1;
+  font-size: clamp(38px, 11vw, 68px); background: var(--paper); border: 3px solid var(--edge);
+  border-bottom-width: 12px; border-radius: 20px; animation: bob 2.4s ease-in-out infinite;
+}
+.logo span:nth-child(2) { animation-delay: .2s; background: #ffe2d8; }
+.logo span:nth-child(3) { animation-delay: .4s; background: #d8f5c4; }
+.logo span:nth-child(4) { animation-delay: .6s; background: #e6e1ff; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.tagline { font-size: clamp(20px, 5vw, 28px); text-align: center; color: var(--ink); background: var(--paper); padding: 8px 18px; border-radius: 999px; }
+#btnStart { font-size: 30px; padding: 16px 40px; }
+
+/* map */
+.topbar { width: 100%; max-width: 980px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.wallet { display: flex; gap: 10px; flex-wrap: wrap; }
+.chip { background: var(--paper); border: 2px solid var(--edge); border-radius: 999px; padding: 6px 14px; font-size: 20px; display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.coin { width: 20px; height: 20px; border-radius: 50%; background: var(--gold); border: 2px solid var(--gold-deep); display: inline-block; box-sizing: border-box; }
+.star { color: var(--gold-deep); }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.islands { width: 100%; max-width: 980px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.island { background: var(--paper); border: 2px solid var(--edge); border-bottom-width: 8px; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+.island .band { padding: 12px 16px; color: #fff; display: flex; align-items: baseline; gap: 10px; text-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.island .band b { font-weight: 400; font-size: 34px; }
+.island .band span { font-size: 18px; }
+.island .stages { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.island .stages .key { display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
+.island.locked { opacity: .6; }
+.island .lockmsg { padding: 0 16px 14px; color: var(--ink-soft); font-size: 15px; }
+.review { width: 100%; max-width: 980px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.review p { color: var(--ink); background: var(--paper); border-radius: 12px; padding: 8px 12px; }
+
+/* HUD */
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#hud > * { pointer-events: auto; }
+.hud-top {
+  position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.hud-top > * { pointer-events: auto; }
+.hud-left, .hud-right { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.hud-right { align-items: flex-end; }
+#qcard {
+  position: absolute; left: 50%; transform: translateX(-50%); top: max(64px, calc(env(safe-area-inset-top, 0px) + 52px));
+  min-width: min(340px, 86vw); max-width: 92vw; box-sizing: border-box; text-align: center;
+  background: var(--paper); border: 3px solid var(--edge); border-bottom-width: 10px; border-radius: 22px; padding: 10px 22px 12px;
+}
+#qmain { font-size: clamp(34px, 9vw, 60px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+#qsub { font-size: clamp(15px, 3.8vw, 19px); color: var(--ink-soft); margin-top: 4px; }
+#qcard.good { border-color: var(--mint); }
+#qcard.good #qmain { color: var(--mint-deep); }
+#qcard.pop { animation: pop .35s ease-out; }
+@keyframes pop { 0% { transform: translateX(-50%) scale(1); } 40% { transform: translateX(-50%) scale(1.08); } 100% { transform: translateX(-50%) scale(1); } }
+#combo { font-size: 18px; color: var(--coral-deep); background: var(--paper); border-radius: 999px; padding: 4px 12px; }
+#toast {
+  position: absolute; left: 50%; bottom: max(150px, calc(env(safe-area-inset-bottom, 0px) + 140px)); transform: translateX(-50%);
+  background: var(--ink); color: #fff; border-radius: 999px; padding: 10px 20px; font-size: 20px; white-space: nowrap;
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+#toast.show { opacity: 1; }
+#hint {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 250, 240, .9); border-radius: 999px; padding: 6px 14px; font-size: 16px; color: var(--ink-soft); white-space: nowrap;
+  pointer-events: none;
+}
+
+/* touch */
+#joy {
+  position: absolute; left: max(20px, env(safe-area-inset-left, 0px)); bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 250, 240, .45); border: 3px solid rgba(255, 250, 240, .9); touch-action: none;
+}
+#knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 16px; background: var(--paper); border: 2px solid var(--edge); border-bottom-width: 6px; box-sizing: border-box; }
+#btnJump { position: absolute; right: max(20px, env(safe-area-inset-right, 0px)); bottom: max(36px, env(safe-area-inset-bottom, 0px)); font-size: 22px; padding: 18px 22px; touch-action: none; }
+
+/* result & sheets */
+.sheet { justify-content: center; }
+.sheet .panel { max-width: 560px; display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+.bigstars { font-size: 56px; letter-spacing: 6px; }
+.bigstars .off { color: var(--edge); }
+.bigstars .on { color: var(--gold); text-shadow: 0 3px 0 var(--gold-deep); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.learned { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.learned span { background: #e3f7ec; color: var(--mint-deep); border-radius: 10px; padding: 4px 10px; font-size: 18px; }
+.muted { color: var(--ink-soft); }
+
+/* keyboard room */
+.kbd-wrap { overflow-x: auto; width: 100%; }
+.kbd {
+  display: grid; grid-template-columns: repeat(12, minmax(34px, 1fr)); gap: 6px; padding: 14px; min-width: 470px;
+  background: #4a4e69; border-radius: 18px; border-bottom: 10px solid #34374d; box-sizing: border-box;
+}
+.kc {
+  aspect-ratio: 1; display: grid; place-items: center; border-radius: 9px; font-size: clamp(14px, 2.6vw, 22px); cursor: pointer;
+  border: 2px solid rgba(0,0,0,.18); border-bottom-width: 6px; color: var(--ink); background: var(--paper); box-sizing: border-box;
+  transition: transform .06s;
+}
+.kc:active { transform: translateY(3px); }
+.kc.empty { background: #5f6382; border: 2px dashed #8d91b3; color: #8d91b3; cursor: default; }
+.kc.r-레어 { box-shadow: 0 0 0 2px #5bb0ff; }
+.kc.r-반짝 { box-shadow: 0 0 0 2px var(--coral); }
+.kc.r-전설 { box-shadow: 0 0 0 3px var(--gold), 0 0 10px var(--gold); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; font-size: 15px; color: var(--ink-soft); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 4px; vertical-align: -1px; }
+.prize { width: 110px; height: 110px; font-size: 44px; animation: prize .6s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes prize { from { transform: scale(.2) rotate(-20deg); } to { transform: scale(1) rotate(0); } }
+.capsule-machine { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 12%, transparent 13%), #bfe6ff; border: 4px solid var(--edge-deep); display: grid; place-items: center; font-size: 22px; position: relative; overflow: hidden; }
+.capsule-machine.spin { animation: spin .8s ease-in-out; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.minis { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 110px; }
+.minis b { width: 18px; height: 18px; border-radius: 50%; display: block; }
+
+/* parent */
+.grid-wrap { overflow-x: auto; width: 100%; }
+table.mastery { border-collapse: separate; border-spacing: 4px; margin: 0 auto; font-variant-numeric: tabular-nums; }
+table.mastery th { font-weight: 400; color: var(--ink-soft); font-size: 15px; padding: 2px 4px; }
+table.mastery td { width: 40px; height: 34px; border-radius: 8px; text-align: center; font-size: 13px; color: var(--ink); }
+.lv0 { background: #ebe5d8; } .lv1 { background: #ffe6a8; } .lv2 { background: #ffc37a; } .lv3 { background: #8fdcb5; }
+.field { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.field input[type=number] { font: inherit; font-size: 22px; width: 110px; padding: 6px 10px; border-radius: 10px; border: 2px solid var(--edge); background: #fff; color: var(--ink); }
+.field input[type=range] { width: 160px; accent-color: var(--coral); }
+.field label { font-size: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .logo span, .prize, .capsule-machine.spin, #qcard.pop { animation: none; }
+}
+</style>
+
+<canvas id="gl"></canvas>
+
+<section id="title" class="screen">
+  <div class="logo" aria-label="키캡월드"><span>키</span><span>캡</span><span>월</span><span>드</span></div>
+  <p class="tagline">키캡을 밟으면 딸깍! 구구단 어드벤처</p>
+  <button id="btnStart" class="key primary">시작하기</button>
+</section>
+
+<section id="map" class="screen" hidden>
+  <div class="topbar">
+    <div class="wallet">
+      <span class="chip"><i class="coin"></i><span id="mapCoins">0</span></span>
+      <span class="chip"><span class="star">★</span><span id="mapStars">0</span></span>
+      <span class="chip">키캡 <span id="mapCaps">0</span>/36</span>
+    </div>
+    <div class="tools">
+      <button class="key small" id="btnKeyboard">내 키보드</button>
+      <button class="key small gold" id="btnCapsule">키캡 캡슐</button>
+      <button class="key small" id="btnParent">보호자</button>
+    </div>
+  </div>
+  <div class="review">
+    <button class="key mint" id="btnReview">복습 다리</button>
+    <p id="reviewMsg">틀렸던 곱셈을 모아서 다시 풀어요</p>
+  </div>
+  <div class="islands" id="islands"></div>
+</section>
+
+<section id="hud" hidden>
+  <div class="hud-top">
+    <div class="hud-left">
+      <span class="chip"><i class="coin"></i><span id="hudCoins">0</span></span>
+      <span id="combo" hidden></span>
+    </div>
+    <div class="hud-right">
+      <button class="key small" id="btnExit">지도로</button>
+      <button class="key small" id="btnVoice">다시 듣기</button>
+    </div>
+  </div>
+  <div id="qcard"><div id="qmain"></div><div id="qsub"></div></div>
+  <div id="toast"></div>
+  <div id="hint">방향키로 걷기 · 스페이스바 점프</div>
+  <div id="joy" hidden><div id="knob"></div></div>
+  <button id="btnJump" class="key" hidden>점프</button>
+</section>
+
+<section id="result" class="screen sheet dim" hidden>
+  <div class="panel">
+    <h2 id="resTitle" style="font-size:34px">스테이지 클리어!</h2>
+    <div class="bigstars" id="resStars"></div>
+    <p class="chip"><i class="coin"></i>+<span id="resCoins">0</span></p>
+    <div id="resLearnedBox">
+      <p class="muted" style="margin-bottom:6px">이번 판에서 더 잘하게 된 곱셈</p>
+      <div class="learned" id="resLearned"></div>
+    </div>
+    <div id="resPrize" class="row"></div>
+    <div class="row">
+      <button class="key" id="resAgain">다시 하기</button>
+      <button class="key primary" id="resNext">다음 단계</button>
+      <button class="key" id="resMap">지도로</button>
+    </div>
+  </div>
+</section>
+
+<section id="keyboard" class="screen sheet dim" hidden>
+  <div class="panel" style="max-width:820px">
+    <h2 style="font-size:30px">내 키보드</h2>
+    <p class="muted" id="kbdCount"></p>
+    <div class="kbd-wrap"><div class="kbd" id="kbd"></div></div>
+    <div class="legend">
+      <span><i style="background:#d9cdb8"></i>일반</span>
+      <span><i style="background:#5bb0ff"></i>레어 (캡슐)</span>
+      <span><i style="background:#ff7a59"></i>반짝 (섬 클리어)</span>
+      <span><i style="background:#ffc542"></i>전설 (단 마스터)</span>
+    </div>
+    <p id="kbdName" class="muted">키캡을 눌러 소리를 들어 봐요</p>
+    <h3>밟을 때 나는 소리</h3>
+    <div class="row" id="soundPick"></div>
+    <button class="key primary" data-close>닫기</button>
+  </div>
+</section>
+
+<section id="capsule" class="screen sheet dim" hidden>
+  <div class="panel">
+    <h2 style="font-size:30px">키캡 캡슐</h2>
+    <div class="capsule-machine" id="machine"><div class="minis" id="minis"></div></div>
+    <div id="capPrize" class="row"></div>
+    <p id="capMsg" class="muted">30코인으로 키캡 1개를 뽑아요. 하루에 3번까지!</p>
+    <p class="muted">이미 있는 키캡이 나오면 조각 1개. 조각 5개면 새 키캡으로 바꿔 줘요. <span id="frags"></span></p>
+    <div class="row">
+      <button class="key gold" id="btnDraw">뽑기 (30코인)</button>
+      <button class="key" data-close>닫기</button>
+    </div>
+  </div>
+</section>
+
+<section id="parent" class="screen sheet dim" hidden>
+  <div class="panel" style="max-width:720px">
+    <h2 style="font-size:30px">보호자</h2>
+    <div id="gate" class="field" style="flex-direction:column">
+      <p>어른 확인: <span id="gateQ"></span> = ?</p>
+      <div class="field">
+        <input type="number" id="gateIn" inputmode="numeric" aria-label="답">
+        <button class="key small primary" id="gateOk">확인</button>
+      </div>
+      <p id="gateMsg" class="muted"></p>
+    </div>
+    <div id="parentBody" hidden style="display:flex;flex-direction:column;gap:14px;width:100%">
+      <p id="todayTime"></p>
+      <h3>곱셈별 숙달표</h3>
+      <div class="grid-wrap"><table class="mastery" id="mtable"></table></div>
+      <div class="legend">
+        <span><i class="lv0"></i>아직 안 봄</span><span><i class="lv1"></i>익히는 중</span><span><i class="lv2"></i>거의 앎</span><span><i class="lv3"></i>완벽 (다른 날에도 5초 안에 정답)</span>
+      </div>
+      <p id="weak" class="muted"></p>
+      <div class="field"><label for="volSfx">효과음</label><input type="range" id="volSfx" min="0" max="1" step="0.1"></div>
+      <div class="field"><label for="volVoice">읽어 주는 목소리</label><input type="range" id="volVoice" min="0" max="1" step="0.1"></div>
+      <div class="field"><label><input type="checkbox" id="allOpen"> 모든 섬과 단계 열기</label></div>
+      <div class="field">
+        <button class="key small" id="btnReset">기록 지우기</button>
+        <button class="key small primary" id="btnResetYes" hidden>정말 지우기</button>
+      </div>
+    </div>
+    <button class="key primary" data-close>닫기</button>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const rand = (a, b) => a + Math.random() * (b - a);
+const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+/* ---------- save ---------- */
+const SAVE_KEY = 'keycapworld-v1';
+const defaults = () => ({ coins: 0, stars: {}, facts: {}, keycaps: [], frags: 0, capsDay: '', capsN: 0, sound: '', allOpen: false, vol: { sfx: 0.8, voice: 1 }, playDay: '', playSec: 0 });
+let S = defaults();
+try { const raw = localStorage.getItem(SAVE_KEY); if (raw) S = Object.assign(defaults(), JSON.parse(raw)); } catch (e) {}
+const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- islands, sounds, keycaps ---------- */
+const ISL = [
+  { d: 2, name: '새싹 초원', sky: 0xc8f0d8, ground: 0x7cc96b, base: 0x5aa34f, cap: 0xe4f8d6, hex: '#7cc96b', snd: 'soft' },
+  { d: 5, name: '바닷가 모래섬', sky: 0xbfe8ff, ground: 0x5bc0eb, base: 0xd9a95f, cap: 0xfff0c9, hex: '#e9b65f', snd: 'splash' },
+  { d: 3, name: '사탕 마을', sky: 0xffe3f0, ground: 0xffb3cf, base: 0xe57aa5, cap: 0xffe3ee, hex: '#f088b2', snd: 'pop' },
+  { d: 4, name: '구름 섬', sky: 0xdcd6ff, ground: 0xf7f5ff, base: 0x9a8cf0, cap: 0xf0edff, hex: '#9a8cf0', snd: 'pong' },
+  { d: 6, name: '눈사람 설원', sky: 0xdff1ff, ground: 0xf4fbff, base: 0x7fb6d9, cap: 0xffffff, hex: '#6fa9cf', snd: 'snow' },
+  { d: 7, name: '공룡 정글', sky: 0xd2f0c0, ground: 0x3f8f4a, base: 0x2f6e3a, cap: 0xd6efb4, hex: '#3f8f4a', snd: 'tack' },
+  { d: 8, name: '로봇 공장', sky: 0xd5dde6, ground: 0x8796a8, base: 0x5c6b7d, cap: 0xe6ebf1, hex: '#76879b', snd: 'clicky' },
+  { d: 9, name: '우주 정거장', sky: 0x23275a, ground: 0x2b2f6b, base: 0x4b3fa0, cap: 0xd9d4ff, hex: '#6a5cff', snd: 'space' }
+];
+/* Each switch is modal synthesis: a short noise hit (key bottoming out) rings a few
+   damped resonances (the plastic keycap and case), plus a high click transient.
+   modes: [frequency Hz, decay s, gain]. hits: times of each impact in s (a clicky switch has two). */
+const SND = {
+  soft:   { label: '톡톡',   hits: [0],          click: .35, lp: 5000,  modes: [[420, .018, 1], [800, .014, .8], [1350, .01, .6], [2300, .007, .4]] },
+  splash: { label: '찰박',   hits: [0],          click: .3,  lp: 7000,  tail: [.035, .22], modes: [[850, .02, 1], [1600, .015, .8], [2700, .01, .6]] },
+  pop:    { label: '뽁뽁',   hits: [0],          click: .3,  lp: 5000,  modes: [[620, .022, 1], [1180, .014, .6], [1900, .01, .4]] },
+  pong:   { label: '퐁',     hits: [0],          click: .2,  lp: 4000,  modes: [[480, .04, 1], [960, .025, .5], [1450, .015, .3]] },
+  snow:   { label: '사각',   hits: [0],          click: .5,  lp: 9000,  tail: [.05, .55], modes: [[1100, .012, .6], [2300, .01, .5]] },
+  tack:   { label: '딱',     hits: [0],          click: .6,  lp: 12000, modes: [[1500, .014, 1], [2600, .01, .9], [3900, .008, .7], [5200, .006, .4]] },
+  clicky: { label: '철컥',   hits: [0, .011],    click: .9,  lp: 12000, modes: [[1300, .016, 1], [2300, .012, .9], [3600, .008, .7]] },
+  space:  { label: '우우웅', hits: [0, .006],    click: .35, lp: 4500,  modes: [[260, .032, 1], [540, .025, .8], [1000, .02, .5], [3100, .06, .08]] }
+};
+const CAP_GLYPHS = ['★', '♥', '♪', '☀', '✿', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'Q', 'W', 'Z', '?', '!'];
+const CAP_COLORS = ['#ffd6e0', '#ffe8b3', '#d6f5d6', '#d6ecff', '#e8dcff', '#fff3d6', '#ffdccc', '#cff2ee', '#f0f0f0', '#ffe0f0'];
+const CAPS = [];
+CAP_GLYPHS.forEach((g, i) => CAPS.push({ id: 'c' + i, glyph: g, color: CAP_COLORS[i % CAP_COLORS.length], rar: i < 5 ? '레어' : '일반', name: (i < 5 ? '레어 ' : '') + g + ' 키캡' }));
+ISL.forEach(s => CAPS.push({ id: 't' + s.d, glyph: String(s.d), color: s.hex, rar: '반짝', name: s.name + ' 키캡', snd: s.snd }));
+ISL.forEach(s => CAPS.push({ id: 'L' + s.d, glyph: s.d + '단', color: '#ffc542', rar: '전설', name: s.d + '단 마스터 키캡' }));
+const capById = id => CAPS.find(c => c.id === id);
+
+/* ---------- Korean reading ---------- */
+const KN = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+const readNum = n => n < 10 ? KN[n] : (Math.floor(n / 10) === 1 ? '' : KN[Math.floor(n / 10)]) + '십' + (n % 10 ? KN[n % 10] : '');
+const josa = b => [2, 4, 5, 9].includes(b) ? '는' : '은';
+const reading = (a, b) => `${KN[a]} ${KN[b]}${josa(b)} ${readNum(a * b)}`;
+
+/* ---------- audio ---------- */
+let AC = null, master = null, noiseBuf = null;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.vol.sfx; master.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, Math.floor(AC.sampleRate * .3), AC.sampleRate);
+    const ch = noiseBuf.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  } catch (e) { AC = null; }
+}
+function strokeBuffer(s, release) {
+  const sr = AC.sampleRate, len = Math.floor(sr * .16);
+  const ex = new Float32Array(len), body = new Float32Array(len), out = new Float32Array(len);
+  const hits = release ? [0] : s.hits, exLen = Math.floor(sr * .004), exDec = sr * .0009;
+  hits.forEach((h, k) => {
+    const at = Math.floor(h * sr), amp = k === hits.length - 1 ? 1 : .7;
+    for (let i = 0; i < exLen && at + i < len; i++) ex[at + i] += (Math.random() * 2 - 1) * Math.exp(-i / exDec) * amp;
+  });
+  for (const [f0, tau, g] of s.modes) {
+    const f = f0 * (release ? 1.22 : 1) * (1 + (Math.random() - .5) * .05);
+    const w = 2 * Math.PI * f / sr, r = Math.exp(-1 / (tau * (release ? .7 : 1) * sr)), c1 = 2 * r * Math.cos(w), c2 = -r * r;
+    let y1 = 0, y2 = 0, peak = 1e-9; const m = new Float32Array(len);
+    for (let n = 0; n < len; n++) { const y = ex[n] + c1 * y1 + c2 * y2; m[n] = y; y2 = y1; y1 = y; if (Math.abs(y) > peak) peak = Math.abs(y); }
+    for (let n = 0; n < len; n++) body[n] += m[n] / peak * g;
+  }
+  let bp = 1e-9; for (let n = 0; n < len; n++) bp = Math.max(bp, Math.abs(body[n]));
+  const a = 1 - Math.exp(-2 * Math.PI * s.lp / sr); let lp = 0, prev = 0, peak = 1e-9;
+  for (let n = 0; n < len; n++) {
+    let x = body[n] / bp + (ex[n] - prev) * s.click * 1.6; prev = ex[n];
+    if (s.tail && !release) x += (Math.random() * 2 - 1) * Math.exp(-n / (s.tail[0] * sr)) * s.tail[1] * Math.min(1, n / (sr * .002));
+    lp += a * (x - lp); out[n] = lp; if (Math.abs(lp) > peak) peak = Math.abs(lp);
+  }
+  const fade = Math.floor(sr * .01);
+  for (let n = 0; n < len; n++) out[n] = out[n] / peak * .9 * (n > len - fade ? (len - n) / fade : 1);
+  const buf = AC.createBuffer(1, len, sr); buf.copyToChannel ? buf.copyToChannel(out, 0) : buf.getChannelData(0).set(out);
+  return buf;
+}
+const strokeCache = {};
+function strokes(name) {
+  if (!strokeCache[name]) { const s = SND[name]; strokeCache[name] = { down: [0, 1, 2].map(() => strokeBuffer(s, false)), up: [0, 1].map(() => strokeBuffer(s, true)) }; }
+  return strokeCache[name];
+}
+function playBuf(buf, t, rate, gain) {
+  const src = AC.createBufferSource(), g = AC.createGain();
+  src.buffer = buf; src.playbackRate.value = rate; g.gain.value = gain;
+  src.connect(g); g.connect(master); src.start(t);
+}
+function keySound(name, p = 1) {
+  if (!AC) return;
+  const k = strokes(SND[name] ? name : 'soft'), t = AC.currentTime + .003;
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  playBuf(pick(k.down), t, p * (.96 + Math.random() * .08), .95);
+  playBuf(pick(k.up), t + .09 + Math.random() * .05, p * (.97 + Math.random() * .06), .32);
+}
+function note(f, dur, type = 'triangle', gain = .2, when = 0) {
+  if (!AC) return;
+  const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
+}
+const SCALE = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.51];
+const chime = c => { const f = SCALE[Math.min(c, SCALE.length - 1)]; note(f, .3, 'triangle', .25); note(f * 1.5, .35, 'sine', .1, .05); };
+const boop = () => { if (!AC) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(340, t); o.frequency.exponentialRampToValueAtTime(200, t + .25); g.gain.setValueAtTime(.18, t); g.gain.exponentialRampToValueAtTime(.001, t + .28); o.connect(g); g.connect(master); o.start(t); o.stop(t + .3); };
+const coinSnd = () => { note(987.77, .1, 'square', .07); note(1318.5, .25, 'square', .07, .08); };
+const fanfare = () => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, i === 3 ? .6 : .18, 'triangle', .25, i * .13));
+
+/* ---------- voice ---------- */
+let koVoice = null, lastSpeech = '';
+function pickVoice() {
+  try { const vs = speechSynthesis.getVoices(); koVoice = vs.find(v => v.lang && v.lang.toLowerCase().startsWith('ko')) || null; } catch (e) {}
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text) {
+  lastSpeech = text;
+  if (!('speechSynthesis' in window) || S.vol.voice <= 0) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ko-KR'; if (koVoice) u.voice = koVoice; u.rate = .95; u.pitch = 1.15; u.volume = S.vol.voice;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ---------- three.js scene ---------- */
+const canvas = $('#gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, .1, 200);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8f9e, .8); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, .8);
+sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 40 });
+scene.add(sun, sun.target);
+const world = new THREE.Group(); scene.add(world);
+function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 70 : 55; camera.updateProjectionMatrix(); }
+window.addEventListener('resize', resize); resize();
+
+const TILE = 2.2, CAP_Y = .6 + .19, TOP_Y = .6 + .38;
+const baseGeo = new THREE.BoxGeometry(2.08, .6, 2.08);
+const capGeo = new THREE.CylinderGeometry(1.5 / Math.SQRT2, 1.9 / Math.SQRT2, .38, 4, 1); capGeo.rotateY(Math.PI / 4);
+const labelGeo = new THREE.PlaneGeometry(1.48, 1.48); labelGeo.rotateX(-Math.PI / 2);
+const matCache = new Map();
+const mat = c => { if (!matCache.has(c)) matCache.set(c, new THREE.MeshStandardMaterial({ color: c, roughness: .65, flatShading: true })); return matCache.get(c); };
+
+function labelTexture(main, sub, bg, fg) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+  const g = cv.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const fam = "'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  let size = main.length <= 2 ? 150 : main.length <= 3 ? 116 : main.length <= 5 ? 76 : 58;
+  g.font = `${size}px ${fam}`;
+  g.fillText(main, 128, sub ? 108 : 136);
+  if (sub) { g.font = `64px ${fam}`; g.fillText(sub, 128, 196); }
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  return tex;
+}
+
+let tiles = [];
+let isl = ISL[0];
+function hex(c) { return '#' + c.toString(16).padStart(6, '0'); }
+function addTile(x, z, o = {}) {
+  const g = new THREE.Group(); g.position.set(x, o.rise ? -5 : 0, z);
+  const base = new THREE.Mesh(baseGeo, mat(o.base ?? isl.base)); base.position.y = .3; base.receiveShadow = true;
+  const capMat = new THREE.MeshStandardMaterial({ color: o.cap ?? isl.cap, roughness: .5, flatShading: true });
+  const cap = new THREE.Mesh(capGeo, capMat); cap.position.y = CAP_Y; cap.castShadow = true; cap.receiveShadow = true;
+  g.add(base, cap);
+  const t = { g, cap, capMat, x, z, kind: o.kind || 'plain', value: o.value, active: true, press: 0, rise: o.rise ? 0 : 1, sink: false, glow: false, label: null, o };
+  if (o.text != null) setLabel(t, o.text, o.sub, o.bg || hex(o.cap ?? isl.cap), o.fg || '#2b2d42');
+  world.add(g); tiles.push(t);
+  return t;
+}
+function setLabel(t, text, sub, bg, fg) {
+  if (t.label) { t.label.material.map.dispose(); t.label.material.dispose(); t.cap.remove(t.label); }
+  const m = new THREE.MeshBasicMaterial({ map: labelTexture(String(text), sub, bg, fg) });
+  const pl = new THREE.Mesh(labelGeo, m); pl.position.y = .192; t.cap.add(pl); t.label = pl;
+  t.capMat.color.set(bg);
+}
+function clearWorld() {
+  world.traverse(o => {
+    if (o.isMesh) {
+      if (o.material && o.material.map) o.material.map.dispose();
+      if (o.material && !Array.from(matCache.values()).includes(o.material)) o.material.dispose();
+      if (o.geometry && o.geometry !== baseGeo && o.geometry !== capGeo && o.geometry !== labelGeo) o.geometry.dispose();
+    }
+  });
+  world.clear(); tiles = [];
+}
+function tileAt(x, z) {
+  for (const t of tiles) if (t.active && t.rise > .92 && Math.abs(x - t.x) < 1.12 && Math.abs(z - t.z) < 1.12) return t;
+  return null;
+}
+
+/* decoration: floating blocks and ground */
+function addScenery(zFrom, zTo) {
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(isl.ground));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -10; ground.receiveShadow = true; world.add(ground);
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  for (let i = 0; i < 46; i++) {
+    const side = Math.random() < .5 ? -1 : 1, s = rand(.8, 3.2);
+    const m = new THREE.Mesh(geo, mat(Math.random() < .5 ? isl.base : isl.cap));
+    m.scale.set(s, s * rand(.6, 1.4), s);
+    m.position.set(side * rand(6, 26), rand(-9, 1.5), rand(zTo, zFrom));
+    m.rotation.y = rand(0, Math.PI); m.userData.bob = rand(0, 6);
+    world.add(m);
+  }
+  if (isl.d === 9) {
+    const sg = new THREE.BoxGeometry(.15, .15, .15), sm = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (let i = 0; i < 120; i++) { const st = new THREE.Mesh(sg, sm); st.position.set(rand(-60, 60), rand(4, 40), rand(zTo - 30, zFrom)); world.add(st); }
+  }
+}
+
+/* ---------- player ---------- */
+function makePlayer() {
+  const g = new THREE.Group();
+  const m = c => new THREE.MeshStandardMaterial({ color: c, roughness: .7, flatShading: true });
+  const box = (w, h, d, c, x, y, z, parent = g) => { const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m(c)); me.position.set(x, y, z); me.castShadow = true; parent.add(me); return me; };
+  const limb = (x, y) => { const p = new THREE.Group(); p.position.set(x, y, 0); g.add(p); return p; };
+  const legL = limb(-.15, .5), legR = limb(.15, .5), armL = limb(-.45, 1.08), armR = limb(.45, 1.08);
+  box(.26, .5, .3, 0x3d5a98, 0, -.25, 0, legL); box(.26, .5, .3, 0x3d5a98, 0, -.25, 0, legR);
+  box(.66, .62, .4, 0xff7a59, 0, .81, 0);
+  box(.2, .3, .24, 0xff7a59, 0, -.1, 0, armL); box(.2, .3, .24, 0xff7a59, 0, -.1, 0, armR);
+  box(.18, .26, .2, 0xffd9b3, 0, -.38, 0, armL); box(.18, .26, .2, 0xffd9b3, 0, -.38, 0, armR);
+  box(.56, .52, .52, 0xffd9b3, 0, 1.4, 0);
+  box(.6, .16, .58, 0x3b2a20, 0, 1.7, .01); box(.6, .44, .12, 0x3b2a20, 0, 1.5, .27);
+  box(.1, .3, .5, 0x3b2a20, -.3, 1.52, .02); box(.1, .3, .5, 0x3b2a20, .3, 1.52, .02);
+  box(.08, .11, .04, 0x2b2d42, -.12, 1.42, -.27); box(.08, .11, .04, 0x2b2d42, .12, 1.42, -.27);
+  box(.1, .06, .03, 0xff9fb6, -.2, 1.32, -.265); box(.1, .06, .03, 0xff9fb6, .2, 1.32, -.265);
+  g.scale.setScalar(.95);
+  return { g, legL, legR, armL, armR, phase: 0 };
+}
+const P = makePlayer(); scene.add(P.g); P.g.visible = false;
+const pl = { x: 0, y: TOP_Y, z: 0, vy: 0, ground: true, on: null, safe: { x: 0, z: 0 }, facing: Math.PI };
+
+/* ---------- input ---------- */
+const keys = new Set(); let jumpReq = false; const joy = { x: 0, y: 0, id: null };
+window.addEventListener('keydown', e => {
+  if (mode !== 'play') return;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Space'].includes(e.key) || e.code === 'Space') e.preventDefault();
+  keys.add(e.code); if (e.code === 'Space') jumpReq = true;
+});
+window.addEventListener('keyup', e => keys.delete(e.code));
+window.addEventListener('blur', () => keys.clear());
+const touchy = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+const joyEl = $('#joy'), knob = $('#knob');
+joyEl.addEventListener('pointerdown', e => { joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); moveJoy(e); });
+joyEl.addEventListener('pointermove', e => { if (e.pointerId === joy.id) moveJoy(e); });
+const endJoy = e => { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; knob.style.transform = ''; };
+joyEl.addEventListener('pointerup', endJoy); joyEl.addEventListener('pointercancel', endJoy);
+function moveJoy(e) {
+  const r = joyEl.getBoundingClientRect(), R = r.width / 2;
+  let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R); const len = Math.hypot(dx, dy);
+  if (len > R) { dx *= R / len; dy *= R / len; }
+  joy.x = dx / R; joy.y = dy / R; knob.style.transform = `translate(${dx * .6}px, ${dy * .6}px)`;
+}
+$('#btnJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
+
+/* ---------- screens ---------- */
+let mode = 'title';
+const screens = ['title', 'map', 'hud', 'result', 'keyboard', 'capsule', 'parent'];
+function show(...ids) { screens.forEach(s => { $('#' + s).hidden = !ids.includes(s); }); }
+let toastT = 0;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1600); }
+function setCard(main, sub, good) {
+  const c = $('#qcard'); $('#qmain').textContent = main; $('#qsub').textContent = sub || '';
+  c.classList.toggle('good', !!good); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
+}
+function updateCoins() { $('#hudCoins').textContent = S.coins; $('#mapCoins').textContent = S.coins; }
+function updateCombo() { const c = $('#combo'); c.hidden = st.combo < 2; c.textContent = `연속 ${st.combo}번 정답!`; }
+
+/* ---------- progress helpers ---------- */
+const fact = (a, b) => (S.facts[a + 'x' + b] ||= { lv: 0, s: 0, d2: '', w: 0 });
+const starsOf = (d, type) => S.stars[d + '-' + type] || 0;
+const islandOpen = i => S.allOpen || i < 2 || starsOf(ISL[i - 1].d, 'bridge') > 0;
+const stageOpen = (d, type) => S.allOpen || type === 'rhythm' || (type === 'bridge' && starsOf(d, 'rhythm') > 0) || (type === 'blank' && starsOf(d, 'bridge') > 0);
+const STAGES = [['rhythm', '리듬 길'], ['bridge', '정답 다리'], ['blank', '빈칸 다리']];
+function grant(id) { if (S.keycaps.includes(id)) return false; S.keycaps.push(id); return true; }
+
+/* ---------- stage state ---------- */
+let st = {};
+async function beginStage(island, type, reviewFacts) {
+  try { await document.fonts.load("64px 'Jua'"); } catch (e) {}
+  initAudio();
+  isl = island; clearWorld();
+  scene.background = new THREE.Color(isl.sky); scene.fog = new THREE.Fog(isl.sky, 26, 75);
+  st = { island, type, review: !!reviewFacts, wrongs: 0, retried: false, coins: 0, combo: 0, leveled: new Set(), queue: [], cur: null, lit: 0, ended: false };
+  for (const x of [-TILE, 0, TILE]) for (const z of [TILE, 0]) addTile(x, z);
+  addScenery(20, -130);
+  Object.assign(pl, { x: 0, y: TOP_Y, z: TILE, vy: 0, ground: true, on: null, safe: { x: 0, z: TILE }, facing: 0 });
+  P.g.visible = true; P.g.position.set(pl.x, pl.y, pl.z);
+  camPos.set(0, 7, TILE + 9);
+  mode = 'play'; show('hud');
+  $('#joy').hidden = $('#btnJump').hidden = !touchy;
+  $('#hint').hidden = touchy;
+  updateCoins(); updateCombo();
+  if (type === 'rhythm') {
+    const d = island.d;
+    for (let i = 1; i <= 9; i++) addTile(0, -TILE * i, { kind: 'rhythm', value: i, text: `${d}×${i}`, sub: `= ${d * i}`, cap: 0xfffaf0 });
+    addTile(TILE, -TILE * 3, { kind: 'coin', text: '+2', cap: 0xffc542 });
+    addTile(-TILE, -TILE * 6, { kind: 'coin', text: '+2', cap: 0xffc542 });
+    addTile(0, -TILE * 10, { kind: 'enter', text: 'ENTER', cap: 0xff7a59, fg: '#ffffff' });
+    setCard(`${d}단 리듬 길`, '키캡을 차례로 밟으며 따라 말해 봐!');
+    speak(`${KN[d]}단 리듬 길이야. 키캡을 하나씩 밟으면서 따라 말해 봐!`);
+  } else {
+    const facts = reviewFacts || shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(b => ({ a: island.d, b }));
+    st.queue = facts.map(f => ({ ...f }));
+    st.total = st.queue.length;
+    setCard(reviewFacts ? '복습 다리' : `${island.d}단 ${type === 'blank' ? '빈칸 다리' : '정답 다리'}`, '앞으로 걸어가서 정답 키캡을 밟아 봐!');
+    setTimeout(() => nextQuestion(0), 900);
+  }
+}
+
+function options(q, blank) {
+  const { a, b } = q, ans = blank ? b : a * b;
+  let cands = blank ? [b - 1, b + 1, b - 2, b + 2, b + 3] : [a * (b - 1), a * (b + 1), (a - 1) * b, (a + 1) * b, a * b + 1, a * b - 2];
+  cands = [...new Set(cands.filter(v => v > 0 && v !== ans && (!blank || v <= 9)))];
+  const picks = shuffle(cands.slice(0, 4)).slice(0, 2);
+  return shuffle([ans, ...picks]);
+}
+function nextQuestion(zRow) {
+  if (mode !== 'play' || st.ended) return;
+  const q = st.queue.shift(); st.cur = q; q.done = false; q.row = [];
+  const blank = st.type === 'blank';
+  const opts = options(q, blank), xs = [-TILE, 0, TILE];
+  opts.forEach((v, i) => {
+    const t = addTile(xs[i], zRow - TILE, { kind: 'answer', value: v, text: String(v), cap: 0xfffaf0, rise: true });
+    t.q = q; q.row.push(t);
+  });
+  q.ans = blank ? q.b : q.a * q.b; q.z = zRow - TILE; q.t0 = performance.now();
+  const left = st.queue.length;
+  if (blank) { setCard(`${q.a} × □ = ${q.a * q.b}`, `빈칸에 들어갈 수를 밟아 봐 · 남은 문제 ${left}`); speak(`${KN[q.a]} 곱하기 몇이 ${readNum(q.a * q.b)}?`); }
+  else { setCard(`${q.a} × ${q.b} = ?`, `정답 키캡을 밟아 봐 · 남은 문제 ${left}`); speak(`${KN[q.a]} 곱하기 ${KN[q.b]}${josa(q.b) === '는' ? '는' : '은'}?`); }
+}
+
+function onStep(t) {
+  const sname = S.sound || isl.snd;
+  keySound(sname, Math.pow(2, Math.min(st.combo || 0, 8) / 24));
+  t.press = 1;
+  if (t.kind === 'coin') {
+    t.kind = 'plain'; S.coins += 2; st.coins += 2; coinSnd(); updateCoins(); toast('+2 코인!');
+    setLabel(t, '', null, hex(isl.cap), '#2b2d42'); save();
+  } else if (t.kind === 'rhythm' && !t.lit) {
+    t.lit = true; st.lit++;
+    const a = isl.d, b = t.value, f = fact(a, b);
+    if (f.lv === 0) { f.lv = 1; st.leveled.add(a + '×' + b); }
+    setLabel(t, `${a}×${b}`, `= ${a * b}`, '#ffe6a8', '#2b2d42');
+    chime(b - 1); speak(reading(a, b)); setCard(`${a} × ${b} = ${a * b}`, reading(a, b), true);
+    S.coins += 1; st.coins += 1; updateCoins(); save();
+  } else if (t.kind === 'answer' && st.cur && t.q === st.cur && !st.cur.done) {
+    if (t.value === st.cur.ans) correct(t); else wrong(t);
+  } else if (t.kind === 'enter' && !st.ended) {
+    if (st.type === 'rhythm' && st.lit < 9) { toast('모든 키캡을 밟아 봐!'); return; }
+    finishStage();
+  }
+}
+
+function correct(t) {
+  const q = st.cur; q.done = true;
+  const ms = performance.now() - q.t0, f = fact(q.a, q.b), before = f.lv;
+  f.s++;
+  if (f.lv === 0) f.lv = 1;
+  else if (f.lv === 1 && f.s >= 2) { f.lv = 2; f.d2 = today(); }
+  else if (f.lv === 2 && ms <= 5000 && f.d2 !== today()) f.lv = 3;
+  if (f.lv > before) st.leveled.add(q.a + '×' + q.b);
+  if (q.retry) st.retried = true;
+  st.combo++; S.coins += 1; st.coins += 1; updateCoins(); updateCombo();
+  chime(st.combo - 1);
+  setLabel(t, String(t.value), null, '#7fe0b0', '#1d5e40');
+  q.row.forEach(o => { o.glow = false; if (o !== t) o.sink = true; });
+  setCard(`${q.a} × ${q.b} = ${q.a * q.b}`, st.combo >= 3 ? `연속 ${st.combo}번! 대단해!` : '딩동댕! 맞았어!', true);
+  speak(reading(q.a, q.b));
+  save();
+  const z0 = t.z;
+  addTile(t.x, z0 - TILE, { kind: 'space', rise: true, cap: 0xffffff, base: isl.base });
+  if (!st.queue.length) {
+    addTile(t.x, z0 - TILE * 2, { kind: 'enter', text: 'ENTER', cap: 0xff7a59, fg: '#ffffff', rise: true });
+    setTimeout(() => { if (mode === 'play') setCard('마지막!', 'ENTER 키캡을 밟으면 클리어!'); }, 1400);
+  } else {
+    const coinX = Math.random() < .35 ? (Math.random() < .5 ? -TILE : TILE) : null;
+    for (const x of [-TILE, 0, TILE]) addTile(x, z0 - TILE * 2, x === coinX ? { rise: true, kind: 'coin', text: '+2', cap: 0xffc542 } : { rise: true });
+    setTimeout(() => nextQuestion(z0 - TILE * 2), 1500);
+  }
+}
+function wrong(t) {
+  if (t.wrongDone) return;
+  const q = st.cur; t.wrongDone = true; st.wrongs++; st.combo = 0; updateCombo();
+  const f = fact(q.a, q.b); f.lv = Math.max(0, f.lv - 1); f.s = 0; f.w = (f.w || 0) + 1;
+  boop(); t.press = 1.6;
+  setLabel(t, String(t.value), null, '#ffc4d2', '#9b3456');
+  q.row.forEach(o => { if (o.value === q.ans) o.glow = true; });
+  setCard(st.type === 'blank' ? `${q.a} × □ = ${q.a * q.b}` : `${q.a} × ${q.b} = ?`, `아깝다! 반짝이는 키캡이 정답이야`);
+  speak(`아깝다! ${reading(q.a, q.b)}`);
+  if (!q.requeued) { q.requeued = true; st.queue.splice(Math.min(2, st.queue.length), 0, { a: q.a, b: q.b, retry: true }); }
+  save();
+}
+
+function finishStage() {
+  st.ended = true; mode = 'result';
+  const d = st.island.d, key = d + '-' + st.type;
+  let stars = 3;
+  if (st.type !== 'rhythm') stars = 1 + (st.wrongs <= 2 ? 1 : 0) + ((st.wrongs === 0 || st.retried) ? 1 : 0);
+  const bonus = 5; S.coins += bonus; st.coins += bonus;
+  const prizes = [];
+  if (!st.review) {
+    S.stars[key] = Math.max(starsOf(d, st.type), stars);
+    if (STAGES.every(([tp]) => starsOf(d, tp) > 0) && grant('t' + d)) prizes.push('t' + d);
+  }
+  ISL.forEach(s => { if ([1, 2, 3, 4, 5, 6, 7, 8, 9].every(b => fact(s.d, b).lv === 3) && grant('L' + s.d)) prizes.push('L' + s.d); });
+  save(); fanfare();
+  $('#resTitle').textContent = st.review ? '복습 완료!' : '스테이지 클리어!';
+  $('#resStars').innerHTML = st.review ? '' : [0, 1, 2].map(i => `<span class="${i < stars ? 'on' : 'off'}">★</span>`).join('');
+  $('#resCoins').textContent = st.coins;
+  const L = [...st.leveled];
+  $('#resLearnedBox').hidden = !L.length;
+  $('#resLearned').innerHTML = L.map(s => `<span>${s}</span>`).join('');
+  $('#resPrize').innerHTML = prizes.map(id => { const c = capById(id); return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="kc prize r-${c.rar}" style="background:${c.color}">${c.glyph}</div><span>새 키캡! ${c.name}</span></div>`; }).join('');
+  const idx = STAGES.findIndex(s => s[0] === st.type);
+  const next = !st.review && idx < 2 ? STAGES[idx + 1][0] : null;
+  $('#resNext').hidden = !next;
+  $('#resNext').onclick = () => beginStage(st.island, next);
+  $('#resAgain').onclick = () => st.review ? startReview() : beginStage(st.island, st.type);
+  setTimeout(() => speak(prizes.length ? '새 키캡을 얻었어! 내 키보드에 끼워 봐!' : (st.review ? '복습 완료! 잘했어!' : `클리어! 별 ${KN[stars]}개!`)), 700);
+  show('hud', 'result');
+}
+
+/* ---------- map ---------- */
+function totalStars() { return Object.values(S.stars).reduce((a, b) => a + b, 0); }
+function reviewFacts() {
+  const list = [];
+  ISL.forEach((s, i) => { if (!islandOpen(i)) return; for (let b = 1; b <= 9; b++) { const f = S.facts[s.d + 'x' + b]; if (f && f.lv >= 1 && f.lv < 3) list.push({ a: s.d, b, lv: f.lv, w: f.w || 0 }); } });
+  list.sort((x, y) => x.lv - y.lv || y.w - x.w);
+  return shuffle(list.slice(0, 9)).map(({ a, b }) => ({ a, b }));
+}
+function startReview() { const f = reviewFacts(); if (f.length < 3) return; beginStage(ISL.find(s => s.d === f[0].a), 'bridge', f); }
+function renderMap() {
+  updateCoins();
+  $('#mapStars').textContent = totalStars();
+  $('#mapCaps').textContent = S.keycaps.length;
+  const rf = reviewFacts();
+  $('#btnReview').disabled = rf.length < 3;
+  $('#reviewMsg').textContent = rf.length < 3 ? '정답 다리를 몇 번 하면 복습 다리가 열려요' : `아직 헷갈리는 곱셈 ${rf.length}개를 다시 풀어요`;
+  $('#islands').innerHTML = ISL.map((s, i) => {
+    const open = islandOpen(i);
+    const btns = STAGES.map(([tp, label]) => {
+      const n = starsOf(s.d, tp), ok = open && stageOpen(s.d, tp);
+      return `<button class="key" data-i="${i}" data-t="${tp}" ${ok ? '' : 'disabled'}><span>${label}</span><span class="star">${'★'.repeat(n)}<span style="color:var(--edge)">${'★'.repeat(3 - n)}</span></span></button>`;
+    }).join('');
+    const prev = i > 0 ? ISL[i - 1] : null;
+    return `<div class="island ${open ? '' : 'locked'}"><div class="band" style="background:${s.hex}"><b>${s.d}단</b><span>${s.name}</span></div><div class="stages">${btns}</div>${open ? '' : `<p class="lockmsg">${prev.d}단 정답 다리를 깨면 열려요</p>`}</div>`;
+  }).join('');
+}
+$('#islands').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if (!b || b.disabled) return;
+  initAudio(); keySound(ISL[+b.dataset.i].snd); beginStage(ISL[+b.dataset.i], b.dataset.t);
+});
+function goMap() {
+  mode = 'map'; P.g.visible = false; try { speechSynthesis.cancel(); } catch (e) {}
+  buildHub(); renderMap(); show('map');
+}
+$('#btnReview').addEventListener('click', () => { initAudio(); startReview(); });
+$('#btnExit').addEventListener('click', goMap);
+$('#resMap').addEventListener('click', goMap);
+$('#btnVoice').addEventListener('click', () => { if (lastSpeech) speak(lastSpeech); });
+
+/* hub: a big decorative keyboard behind the menus */
+let hubT = 0;
+function buildHub() {
+  isl = ISL[0]; clearWorld();
+  scene.background = new THREE.Color(0xbfe6ff); scene.fog = new THREE.Fog(0xbfe6ff, 30, 80);
+  const cols = [0xfffaf0, 0xffe2d8, 0xd8f5c4, 0xe6e1ff, 0xfff0c9, 0xd6ecff];
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++) {
+    addTile((c - 5.5) * TILE + (r % 2) * .6, (r - 2.5) * TILE, { cap: cols[(r * 7 + c * 3) % cols.length], base: 0x4a4e69 });
+  }
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(12 * TILE + 2, .6, 6 * TILE + 2), mat(0x4a4e69)); deck.position.y = -.3; deck.receiveShadow = true; world.add(deck);
+}
+
+/* ---------- keyboard room ---------- */
+function renderKeyboard() {
+  const order = [...CAPS.filter(c => c.rar === '일반' || c.rar === '레어'), ...CAPS.filter(c => c.rar === '반짝'), ...CAPS.filter(c => c.rar === '전설')];
+  $('#kbd').innerHTML = order.map(c => S.keycaps.includes(c.id)
+    ? `<div class="kc r-${c.rar}" data-id="${c.id}" style="background:${c.color}" role="button" tabindex="0" aria-label="${c.name}">${c.glyph}</div>`
+    : `<div class="kc empty" aria-label="빈 자리">?</div>`).join('');
+  const n = S.keycaps.length;
+  $('#kbdCount').textContent = n >= CAPS.length ? '키보드 완성! 정말 대단해!' : `키캡 ${n}/${CAPS.length}개. 섬을 깨고, 단을 마스터하고, 캡슐을 뽑아서 채워요.`;
+  const owned = ISL.filter(s => S.keycaps.includes('t' + s.d));
+  $('#soundPick').innerHTML = [`<button class="key small ${S.sound ? '' : 'mint'}" data-s="">섬마다 다른 소리</button>`]
+    .concat(owned.map(s => `<button class="key small ${S.sound === s.snd ? 'mint' : ''}" data-s="${s.snd}">${SND[s.snd].label} (${s.d}단)</button>`)).join('')
+    + (owned.length ? '' : '<p class="muted" style="width:100%">섬을 모두 깨면 그 섬의 소리를 고를 수 있어요</p>');
+}
+$('#kbd').addEventListener('click', e => {
+  const k = e.target.closest('.kc[data-id]'); if (!k) return;
+  const c = capById(k.dataset.id); initAudio(); keySound(c.snd || S.sound || 'soft'); $('#kbdName').textContent = c.name + ` · ${c.rar}`;
+});
+$('#soundPick').addEventListener('click', e => {
+  const b = e.target.closest('button[data-s]'); if (!b) return;
+  S.sound = b.dataset.s; save(); initAudio(); keySound(S.sound || 'soft'); renderKeyboard();
+});
+$('#btnKeyboard').addEventListener('click', () => { renderKeyboard(); show('map', 'keyboard'); });
+
+/* ---------- capsule ---------- */
+function capsState() { if (S.capsDay !== today()) { S.capsDay = today(); S.capsN = 0; } }
+function renderCapsule() {
+  capsState();
+  $('#frags').textContent = `(지금 조각 ${S.frags}/5)`;
+  const btn = $('#btnDraw');
+  btn.disabled = S.coins < 30 || S.capsN >= 3;
+  $('#capMsg').textContent = S.capsN >= 3 ? '오늘은 다 뽑았어요. 내일 또 와요!' : S.coins < 30 ? `코인이 ${30 - S.coins}개 더 필요해요. 문제를 풀면 코인이 생겨요.` : `30코인으로 키캡 1개를 뽑아요. 오늘 ${3 - S.capsN}번 남았어요.`;
+  $('#minis').innerHTML = CAP_COLORS.concat(CAP_COLORS).map(c => `<b style="background:${c}"></b>`).join('');
+}
+$('#btnDraw').addEventListener('click', () => {
+  capsState(); if (S.coins < 30 || S.capsN >= 3) return;
+  S.coins -= 30; S.capsN++;
+  const pool = CAPS.filter(c => c.rar === (Math.random() < .2 ? '레어' : '일반'));
+  const c = pool[Math.floor(Math.random() * pool.length)];
+  let msg;
+  if (grant(c.id)) msg = `새 키캡! ${c.name}`;
+  else {
+    S.frags++; msg = `이미 있는 키캡이라 조각 1개를 얻었어요`;
+    if (S.frags >= 5) {
+      const missing = CAPS.filter(x => (x.rar === '일반' || x.rar === '레어') && !S.keycaps.includes(x.id));
+      if (missing.length) { const m = missing[Math.floor(Math.random() * missing.length)]; S.frags -= 5; grant(m.id); msg = `조각 5개로 새 키캡! ${m.name}`; }
+    }
+  }
+  save(); updateCoins();
+  const mc = $('#machine'); mc.classList.remove('spin'); void mc.offsetWidth; mc.classList.add('spin');
+  initAudio(); [0, .12, .24, .36].forEach(w => note(700 + w * 900, .08, 'square', .05, w));
+  setTimeout(() => {
+    fanfare();
+    $('#capPrize').innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="kc prize r-${c.rar}" style="background:${c.color}">${c.glyph}</div><span>${msg}</span></div>`;
+    renderCapsule(); renderMap();
+  }, 800);
+});
+$('#btnCapsule').addEventListener('click', () => { $('#capPrize').innerHTML = ''; renderCapsule(); show('map', 'capsule'); });
+
+/* ---------- parent ---------- */
+let gateAns = 0;
+$('#btnParent').addEventListener('click', () => {
+  const a = 12 + Math.floor(Math.random() * 8), b = 6 + Math.floor(Math.random() * 4); gateAns = a * b;
+  $('#gateQ').textContent = `${a} × ${b}`; $('#gateIn').value = ''; $('#gateMsg').textContent = '';
+  $('#gate').hidden = false; $('#parentBody').hidden = true; $('#btnResetYes').hidden = true;
+  show('map', 'parent');
+});
+$('#gateOk').addEventListener('click', () => {
+  if (+$('#gateIn').value === gateAns) { $('#gate').hidden = true; $('#parentBody').hidden = false; renderParent(); }
+  else $('#gateMsg').textContent = '답이 달라요. 다시 확인해 주세요.';
+});
+$('#gateIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gateOk').click(); });
+function renderParent() {
+  const mins = S.playDay === today() ? Math.round(S.playSec / 60) : 0;
+  $('#todayTime').textContent = `오늘 플레이 시간: ${mins}분 · 모은 키캡 ${S.keycaps.length}/${CAPS.length} · 별 ${totalStars()}개`;
+  let h = '<tr><th></th>' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(b => `<th>×${b}</th>`).join('') + '</tr>';
+  for (let a = 2; a <= 9; a++) h += `<tr><th>${a}단</th>` + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(b => { const f = S.facts[a + 'x' + b]; return `<td class="lv${f ? f.lv : 0}">${a * b}</td>`; }).join('') + '</tr>';
+  $('#mtable').innerHTML = h;
+  const weak = Object.entries(S.facts).filter(([, f]) => f.w > 0).sort((x, y) => y[1].w - x[1].w).slice(0, 5);
+  $('#weak').textContent = weak.length ? '자주 틀린 곱셈: ' + weak.map(([k, f]) => `${k.replace('x', '×')} (${f.w}번)`).join(', ') : '아직 틀린 기록이 없어요.';
+  $('#volSfx').value = S.vol.sfx; $('#volVoice').value = S.vol.voice; $('#allOpen').checked = S.allOpen;
+}
+$('#volSfx').addEventListener('input', e => { S.vol.sfx = +e.target.value; if (master) master.gain.value = S.vol.sfx; save(); });
+$('#volSfx').addEventListener('change', () => { initAudio(); keySound('soft'); });
+$('#volVoice').addEventListener('input', e => { S.vol.voice = +e.target.value; save(); });
+$('#volVoice').addEventListener('change', () => speak('이 삼은 육'));
+$('#allOpen').addEventListener('change', e => { S.allOpen = e.target.checked; save(); renderMap(); });
+$('#btnReset').addEventListener('click', () => { $('#btnResetYes').hidden = false; });
+$('#btnResetYes').addEventListener('click', () => { const v = S.vol; S = defaults(); S.vol = v; save(); renderParent(); renderMap(); $('#btnResetYes').hidden = true; });
+
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => { renderMap(); show('map'); }));
+
+/* ---------- title ---------- */
+$('#btnStart').addEventListener('click', () => {
+  initAudio(); pickVoice(); keySound('clicky');
+  speak('키캡월드에 온 걸 환영해!');
+  goMap();
+});
+
+/* ---------- loop ---------- */
+const camPos = new THREE.Vector3(0, 9, 14), camLook = new THREE.Vector3();
+let last = performance.now(), breakSec = 0, saveT = 0;
+function step(dt) {
+  // input
+  let ix = 0, iz = 0;
+  if (keys.has('ArrowLeft') || keys.has('KeyA')) ix -= 1;
+  if (keys.has('ArrowRight') || keys.has('KeyD')) ix += 1;
+  if (keys.has('ArrowUp') || keys.has('KeyW')) iz -= 1;
+  if (keys.has('ArrowDown') || keys.has('KeyS')) iz += 1;
+  ix += joy.x; iz += joy.y;
+  const len = Math.hypot(ix, iz); if (len > 1) { ix /= len; iz /= len; }
+  const speed = 4.4, moving = len > .15;
+  if (moving) {
+    const nx = pl.x + ix * speed * dt, nz = pl.z + iz * speed * dt;
+    if (pl.ground) { if (tileAt(nx, pl.z)) pl.x = nx; if (tileAt(pl.x, nz)) pl.z = nz; }
+    else { pl.x = nx; pl.z = nz; }
+    const want = Math.atan2(-ix, -iz); let dA = want - pl.facing; dA = Math.atan2(Math.sin(dA), Math.cos(dA)); pl.facing += dA * Math.min(1, dt * 12);
+  }
+  const sup = tileAt(pl.x, pl.z);
+  const gy = sup ? TOP_Y - .14 * Math.min(sup.press, 1) : -Infinity;
+  if (jumpReq && pl.ground) { pl.vy = 7.2; pl.ground = false; note(440, .12, 'sine', .06); }
+  jumpReq = false;
+  if (pl.ground) {
+    if (!sup) { pl.ground = false; pl.vy = 0; } else pl.y = gy;
+  }
+  if (!pl.ground) {
+    pl.vy -= 22 * dt; pl.y += pl.vy * dt;
+    if (sup && pl.vy <= 0 && pl.y <= gy && pl.y > gy - .7) { pl.y = gy; pl.vy = 0; pl.ground = true; pl.on = null; }
+    if (pl.y < -7) { Object.assign(pl, { x: pl.safe.x, z: pl.safe.z, y: TOP_Y + 3, vy: 0, ground: false, on: null }); note(660, .2, 'sine', .1); toast('퐁! 다시 여기서'); }
+  }
+  if (pl.ground && sup && sup !== pl.on) { pl.on = sup; pl.safe = { x: sup.x, z: sup.z }; onStep(sup); }
+  // animate player
+  P.g.position.set(pl.x, pl.y, pl.z); P.g.rotation.y = pl.facing;
+  if (moving && pl.ground) P.phase += dt * 11; else P.phase *= .85;
+  const sw = Math.sin(P.phase) * (moving ? .7 : 0);
+  P.legL.rotation.x = sw; P.legR.rotation.x = -sw; P.armL.rotation.x = -sw * .8; P.armR.rotation.x = sw * .8;
+  if (!pl.ground) { P.armL.rotation.x = P.armR.rotation.x = -2.4; }
+  // camera
+  const desired = new THREE.Vector3(pl.x * .85, pl.y + 6.4, pl.z + 7.8);
+  camPos.lerp(desired, Math.min(1, dt * 4));
+  camera.position.copy(camPos);
+  camLook.set(pl.x * .9, pl.y + .4, pl.z - 2.6); camera.lookAt(camLook);
+  sun.position.set(pl.x + 6, 14, pl.z + 6); sun.target.position.set(pl.x, 0, pl.z);
+  // play time + break reminder
+  if (S.playDay !== today()) { S.playDay = today(); S.playSec = 0; }
+  S.playSec += dt; breakSec += dt; saveT += dt;
+  if (breakSec > 20 * 60) { breakSec = 0; toast('20분 지났어! 눈을 쉬게 해 주자'); speak('20분 동안 열심히 했어! 잠깐 먼 곳을 보면서 눈을 쉬게 해 주자.'); }
+  if (saveT > 10) { saveT = 0; save(); }
+}
+function animateTiles(dt, t) {
+  for (let i = tiles.length - 1; i >= 0; i--) {
+    const k = tiles[i];
+    if (k.rise < 1) { k.rise = Math.min(1, k.rise + dt * 2.6); const e = 1 - Math.pow(1 - k.rise, 3); k.g.position.y = -5 * (1 - e); }
+    if (k.sink) { k.active = false; k.g.position.y -= dt * 6; if (k.g.position.y < -14) { world.remove(k.g); tiles.splice(i, 1); continue; } }
+    if (k.press > 0) { k.press = Math.max(0, k.press - dt * 5); }
+    k.cap.position.y = CAP_Y - .14 * Math.min(k.press, 1);
+    if (k.glow) { k.capMat.emissive.setHex(0xffc542); k.capMat.emissiveIntensity = .35 + .35 * Math.sin(t * 8); if (k.label) k.label.material.color.setScalar(.85 + .15 * Math.sin(t * 8)); }
+    else if (k.capMat.emissiveIntensity) { k.capMat.emissiveIntensity = 0; if (k.label) k.label.material.color.setScalar(1); }
+  }
+}
+function hubStep(dt, t) {
+  hubT += dt * .12;
+  camera.position.set(Math.sin(hubT) * 16, 13, Math.cos(hubT) * 16); camera.lookAt(0, 0, 0);
+  sun.position.set(6, 16, 6); sun.target.position.set(0, 0, 0);
+  if (Math.random() < dt * 3 && tiles.length) { const k = tiles[Math.floor(Math.random() * tiles.length)]; k.press = 1; }
+}
+function loop(now) {
+  const dt = Math.min(.066, (now - last) / 1000); last = now; const t = now / 1000;
+  if (mode === 'play') step(dt); else if (mode !== 'result') hubStep(dt, t);
+  animateTiles(dt, t);
+  world.children.forEach(o => { if (o.userData.bob != null) o.position.y += Math.sin(t + o.userData.bob) * dt * .3; });
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+buildHub(); show('title'); requestAnimationFrame(loop);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+})();
+</script>
+
+</html>
